@@ -323,9 +323,10 @@ class HttpSession(object):
         if req.data:
             if isinstance(req.data, str):
                 req_body = req.data.encode('latin1')
-
             elif isinstance(req.data, dict):
                 req_body = urlencode(req.data).encode('latin1')
+            elif isinstance(req.data, bytes):
+                req_body = req.data
 
             else:
                 raise TypeError('data type error')
@@ -472,9 +473,17 @@ class HttpSession(object):
     @cookies.setter
     def cookies(self, value):
         self.cookie_manger.cookies[get_top_domain(self.req.host)] = value
+
     def get(self, url, **kwargs):
         resp = self.request('GET', url, **kwargs)
         resp = self.handle_redirect(resp)
+        return resp
+
+    def put(self, url, **kwargs):
+
+        resp = self.request("PUT", url, **kwargs)
+        resp = self.handle_redirect(resp)
+
         return resp
 
     def post(self,url, **kwargs):
