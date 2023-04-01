@@ -43,9 +43,9 @@ class SocketProxy(socket.socket):
         try:
             super(SocketProxy, self).connect((proxy_addr, proxy_port))
             self.sendall(b"\r\n".join(http_headers))
-            status_line = self.recv(1024).decode()
+            status_line = self.recv(4096).decode()
             proto, status_code, status_msg = status_line.split(" ", 2)
-        except (socket.timeout, ConnectionRefusedError):
+        except (socket.timeout, ConnectionRefusedError,UnicodeDecodeError):
             raise ProxyError(
                 "Proxy server connection time out")
 
@@ -66,7 +66,7 @@ class SocketProxy(socket.socket):
                 error =f'Tunnel connection failed: status_code = {status_code},Unauthorized'
 
             else:
-                error = f'Tunnel connection failed: status_msg = {status_line}'
+                error = f'Tunnel connection failed: status_code = {status_code}'
 
             raise ProxyError(error)
         return True
@@ -75,8 +75,7 @@ if __name__ == '__main__':
     sock  = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
     s = SocketProxy()
     s.set_proxy(1, '127.0.0.1', 7890)
-    s.connect(('www.baidu.com',443))
-    print(s)
+    s.connect(('www.google.com',443))
     print(s.getsockname())
 
 

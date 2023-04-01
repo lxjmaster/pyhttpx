@@ -80,7 +80,7 @@ class Request(object):
         self.scheme = self.parse_url.scheme
         self.path = encode_params(self.url, self.params)
         if self.scheme != 'https':
-            raise TypeError('only supports https')
+            raise TypeError(f'only supports https: {self.url}')
 
 
     def __repr__(self):
