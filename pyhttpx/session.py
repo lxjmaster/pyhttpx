@@ -326,10 +326,9 @@ class HttpSession(object):
         if req.data:
             if isinstance(req.data, str):
                 req_body = req.data.encode('latin1')
+
             elif isinstance(req.data, dict):
                 req_body = urlencode(req.data).encode('latin1')
-            elif isinstance(req.data, bytes):
-                req_body = req.data
 
             else:
                 raise TypeError('data type error')

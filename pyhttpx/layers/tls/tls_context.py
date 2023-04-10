@@ -39,7 +39,7 @@ class TLSContext(object):
         self.sym_keystore_history = []
         self.must_encrypt = False
 
-    
+
 
 def rsa_encrypt(plaintxt, publickey):
     return rsa.encrypt(plaintxt, publickey)
@@ -58,7 +58,7 @@ class TLSSessionCtx(object):
         self.negotiated.key_exchange = None
         self.negotiated.encryption = None
         self.negotiated.mac = None
-        
+
         self.negotiated.version = None
         self.negotiated.hashes = None
         self.negotiated.resumption = False
@@ -120,11 +120,11 @@ class TLSSessionCtx(object):
         self.client_ctx.sequence += 1
         return data
 
-    def decrypt(self, C,content_type ):
+    def decrypt(self, C, content_type):
 
         sequence = struct.pack('!Q', self.server_ctx.sequence)
         if self.tls13:
-            #rfc8446
+            # rfc8446
             # 密文已经包含tag的长度
             A = content_type + b'\x03\x03' + struct.pack('!H', len(C))
         else:
@@ -133,7 +133,7 @@ class TLSSessionCtx(object):
         data = self.server_ctx.crypto_alg.decrypt(C, A, sequence)
         self.server_ctx.sequence += 1
         return data
-    
+
     def load_alg(self):
         cipher_name = TLS_SUITES.get(self.negotiated.ciphersuite)['name']
         kx_alg, cipher_alg, hmac_alg, hash_alg, tls1_3 = get_algs_from_ciphersuite_name(cipher_name)
@@ -150,7 +150,7 @@ class TLSSessionCtx(object):
             self.hmac_alg = hashlib.sha256
 
         if self.tls13:
-            #hash_name = 'SHA256'
+            # hash_name = 'SHA256'
 
             self.hkdf = TLS13_HKDF(hash_alg)
             if 'CHACHA20_POLY1305' in cipher_name:
@@ -210,7 +210,7 @@ class TLSSessionCtx(object):
     def negotiated_premaster_secret(self):
 
         if self.kx_alg.startswith('ECDHE'):
-            name_curve = struct.unpack('!H',self.curve_name)[0]
+            name_curve = struct.unpack('!H', self.curve_name)[0]
             if name_curve == 0x001d:
 
                 self.publickey_bytes = CryptoContextFactory.crypto_container[name_curve].client_kx_privkey.public_key().public_bytes(
@@ -239,7 +239,7 @@ class TLSSessionCtx(object):
             self.publickey_bytes = rsa_encrypt(self.premaster_secret, self.rsa_pulicKey)
 
     def get_verify_data(self, data=None):
-        #对于cbc-sha,tls1.2中,hmac采用sha1,消息摘要用sha256
+        # 对于cbc-sha,tls1.2中,hmac采用sha1,消息摘要用sha256
 
         handshake = self.hash_alg(b''.join(self.handshake_data)).digest()
         label = b"client finished"
@@ -255,7 +255,7 @@ class TLSSessionCtx(object):
         label = b"server finished"
         handshake = self.hash_alg(b''.join(self.handshake_data)).digest()
         tmp = prf(self.master_secret, label + handshake, self.hash_alg,
-                                 outlen=12)
+                  outlen=12)
 
         tmp = b'\x14\x00\x00\x0c' + tmp
         if tmp != server_verify_data:
@@ -268,7 +268,7 @@ class TLSSessionCtx(object):
             self.secrets['client_handshake_traffic_secret'], b''.join(self.handshake_data))
 
         # verify_data_len=3byte
-        verify_data  = b'\x14' + struct.pack("!I", len(verify_data))[1:] + verify_data + b'\x16'
+        verify_data = b'\x14' + struct.pack("!I", len(verify_data))[1:] + verify_data + b'\x16'
         return verify_data
     def make_secret(self, server_publickey):
 
@@ -348,13 +348,13 @@ class TLSSessionCtx13(TLSSessionCtx):
 
         name_curve = 0x001d
         self.group_x25519_key = CryptoContextFactory.crypto_container[name_curve].client_kx_privkey.public_key().public_bytes(
-                serialization.Encoding.Raw,
-                serialization.PublicFormat.Raw
-            )
+            serialization.Encoding.Raw,
+            serialization.PublicFormat.Raw
+        )
 
 
         self.client_secp_kx_privkey = CryptoContextFactory.crypto_container[0x0017].client_kx_privkey
-        self.group_secp_key =  self.client_secp_kx_privkey.public_key().public_bytes(
+        self.group_secp_key = self.client_secp_kx_privkey.public_key().public_bytes(
             serialization.Encoding.X962,
             serialization.PublicFormat.UncompressedPoint
         )
@@ -405,22 +405,22 @@ class TLSSessionCtx13(TLSSessionCtx):
                                                                   b"", 12)
 
 
-    def encrypt(self, P,content_type ):
+    def encrypt(self, P, content_type):
 
         sequence = struct.pack('!Q', self.client_ctx.sequence)
         p_len = len(P)
 
-        #content_type + b'\x03\x03' + len(plaintext) + tag_len
+        # content_type + b'\x03\x03' + len(plaintext) + tag_len
         A = content_type + b'\x03\x03' + struct.pack('!H', p_len + 16)
         data = self.client_ctx.crypto_alg.encrypt(P, A, sequence)
         self.client_ctx.sequence += 1
         return data
 
-    def decrypt(self, C,content_type ):
+    def decrypt(self, C, content_type):
 
         sequence = struct.pack('!Q', self.server_ctx.sequence)
         p_len = len(C)
-        #密文已经包含tag的长度
+        # 密文已经包含tag的长度
         A = content_type + b'\x03\x03' + struct.pack('!H', p_len)
         data = self.server_ctx.crypto_alg.decrypt(C, A, sequence)
         self.server_ctx.sequence += 1
@@ -445,7 +445,7 @@ class TLSSessionCtx13(TLSSessionCtx):
         verify_data = self.hkdf.compute_verify_data(
             self.secrets['client_handshake_traffic_secret'], b''.join(self.handshake_data))
 
-        #verify_data_len=3byte
-        verify_data  = b'\x14' + struct.pack("!I", len(verify_data))[1:] + verify_data + b'\x16'
+        # verify_data_len=3byte
+        verify_data = b'\x14' + struct.pack("!I", len(verify_data))[1:] + verify_data + b'\x16'
 
         return verify_data
