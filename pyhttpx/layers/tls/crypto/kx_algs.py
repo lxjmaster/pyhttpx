@@ -1,16 +1,15 @@
-
-
 _tls_kx_algs = {}
+
 
 class EncryptedPreMasterSecret:
     pass
-class _GenericKXMetaclass(type):
 
+
+class _GenericKXMetaclass(type):
     def __new__(cls, kx_name, bases, dct):
         if kx_name != "_GenericKX":
-            dct["name"] = kx_name[3:]       # remove leading "KX_"
-        the_class = super(_GenericKXMetaclass, cls).__new__(cls, kx_name,
-                                                            bases, dct)
+            dct["name"] = kx_name[3:]  # remove leading "KX_"
+        the_class = super(_GenericKXMetaclass, cls).__new__(cls, kx_name, bases, dct)
         if kx_name != "_GenericKX":
             the_class.export = kx_name.endswith("_EXPORT")
             the_class.anonymous = "_anon" in kx_name
@@ -20,9 +19,9 @@ class _GenericKXMetaclass(type):
         return the_class
 
 
-
 class _GenericKX(metaclass=_GenericKXMetaclass):
     pass
+
 
 class KX_RSA(_GenericKX):
     descr = "RSA encryption"
