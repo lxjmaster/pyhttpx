@@ -1,9 +1,11 @@
 import struct
 
 import random
-from typing import Generic,TypeVar
+from typing import Generic, TypeVar
 
 _tls_ext_cls = {}
+
+
 class ExtensionMetaclass(type):
     def __new__(cls, name, base, attrs):
         new_cls = type.__new__(cls, name, base, attrs)
@@ -13,31 +15,31 @@ class ExtensionMetaclass(type):
 
 
 class _BaseExtension(metaclass=ExtensionMetaclass):
-
     def __bytes__(self):
-        return b''
-
+        return b""
 
     def dump(self, host, context):
         _type = self.fields_desc[0]
         payload = self.fields_desc[1]
         if isinstance(payload, str):
-            payload = payload.encode('latin1')
+            payload = payload.encode("latin1")
 
-        s = b'%s%s%s' % (struct.pack('!H', _type), struct.pack('!H', len(payload)), payload)
+        s = b"%s%s%s" % (
+            struct.pack("!H", _type),
+            struct.pack("!H", len(payload)),
+            payload,
+        )
         return s
+
 
 class ExtServerName(_BaseExtension):
     _type = 0x00
-    payload = ''
-    fields_desc = [
-        _type,
-        payload
-    ]
+    payload = ""
+    fields_desc = [_type, payload]
 
     def dump(self, host, context):
-        temp = b'\x00' + struct.pack('!H',len(host)) + host.encode()
-        self.payload = struct.pack('!H',len(temp)) +  temp
+        temp = b"\x00" + struct.pack("!H", len(host)) + host.encode()
+        self.payload = struct.pack("!H", len(temp)) + temp
         self.fields_desc[1] = self.payload
 
         return super().dump(host, context)
@@ -45,99 +47,107 @@ class ExtServerName(_BaseExtension):
 
 class ExtExTenedMasterSecret(_BaseExtension):
     _type = 0x17
-    payload = ''
+    payload = ""
     fields_desc = [
         _type,
         payload,
     ]
 
+
 class ExtRenegotitationInfo(_BaseExtension):
-    _type = 0xff01
-    payload = '\x00'
+    _type = 0xFF01
+    payload = "\x00"
     fields_desc = [
         _type,
         payload,
     ]
+
+
 class ExtSupportedGroups(_BaseExtension):
-    _type = 0x0a
-    payload = b'\x00\x1d\x00\x17\x00\x18\x00\x19'
+    _type = 0x0A
+    payload = b"\x00\x1d\x00\x17\x00\x18\x00\x19"
     fields_desc = [
         _type,
         payload,
     ]
+
     def dump(self, host, context):
         supported_groups = context.supported_groups or self.payload
-        self.payload = struct.pack('!H',len(supported_groups)) +  supported_groups
+        self.payload = struct.pack("!H", len(supported_groups)) + supported_groups
         self.fields_desc[1] = self.payload
 
         return super().dump(host, context)
 
 
 class ExtEcPoint(_BaseExtension):
-    _type = 0x0b
-    payload = b'\x00'
+    _type = 0x0B
+    payload = b"\x00"
     fields_desc = [
         _type,
         payload,
     ]
+
     def dump(self, host, context):
         ec_points = context.ec_points or self.payload
-        self.payload = struct.pack('!B',len(ec_points)) +  ec_points
+        self.payload = struct.pack("!B", len(ec_points)) + ec_points
         self.fields_desc[1] = self.payload
 
         return super().dump(host, context)
 
+
 class ExtSessionTicket(_BaseExtension):
     _type = 0x23
-    payload = ''
+    payload = ""
     fields_desc = [
         _type,
         payload,
     ]
+
 
 class _ExtNextProtocolNegotiation(_BaseExtension):
     _type = 0x3374
-    payload = ''
+    payload = ""
     fields_desc = [
         _type,
         payload,
     ]
 
+
 class ExtApplicationLayerProtocolNegotiation(_BaseExtension):
-    #应用层协议扩展,暂不支持http2
+    # 应用层协议扩展,暂不支持http2
     _type = 0x10
-    payload = '\x00\x09\x08http/1.1'
-    #h2
-    #payload = bytes.fromhex('000c02683208687474702f312e31')
+    payload = "\x00\x09\x08http/1.1"
+    # h2
+    # payload = bytes.fromhex('000c02683208687474702f312e31')
     fields_desc = [
         _type,
         payload,
     ]
 
     def dump(self, host, context):
-
         if context.http2:
-            payload = bytes.fromhex('000c02683208687474702f312e31')
+            payload = bytes.fromhex("000c02683208687474702f312e31")
         else:
-            payload = bytes.fromhex('000908687474702f312e31')
+            payload = bytes.fromhex("000908687474702f312e31")
         self.fields_desc[1] = payload
 
         return super().dump(host, context)
 
-class ExtApplicationSettings(_BaseExtension):
 
+class ExtApplicationSettings(_BaseExtension):
     _type = 0x4469
-    payload = bytes.fromhex('0003026831')
-    #payload = bytes.fromhex('0003026832')
+    payload = bytes.fromhex("0003026831")
+    # payload = bytes.fromhex('0003026832')
     fields_desc = [
         _type,
         payload,
     ]
+
     def dump(self, host, context):
         if context.http2:
-            payload = bytes.fromhex('0003026832')
+            payload = bytes.fromhex("0003026832")
         else:
-            payload = bytes.fromhex('0003026831')
+            payload = bytes.fromhex("0003026831")
         self.fields_desc[1] = payload
 
         return super().dump(host, context)
@@ -145,135 +155,155 @@ class ExtApplicationSettings(_BaseExtension):
 
 class ExtStatusRequest(_BaseExtension):
     _type = 0x05
-    payload = '\x01\x00\x00\x00\x00'
+    payload = "\x01\x00\x00\x00\x00"
     fields_desc = [
         _type,
         payload,
     ]
+
+
 class ExtDelegatedCredentials(_BaseExtension):
     _type = 0x22
-    payload = '\x00\x08\x04\x03\x05\x03\x06\x03\x02\x03'
+    payload = "\x00\x08\x04\x03\x05\x03\x06\x03\x02\x03"
     fields_desc = [
         _type,
         payload,
     ]
+
 
 class ExtSignatureAlgorithms(_BaseExtension):
-    _type = 0x0d
-    payload = b'\x00\x16\x04\x03\x05\x03\x06\x03\x08\x04\x08\x05\x08\x06\x04\x01\x05\x01\x06\x01\x02\x03\x02\x01'
+    _type = 0x0D
+    payload = b"\x00\x16\x04\x03\x05\x03\x06\x03\x08\x04\x08\x05\x08\x06\x04\x01\x05\x01\x06\x01\x02\x03\x02\x01"
     fields_desc = [
         _type,
         payload,
     ]
-    def dump(self, host, context):
-        if context.browser_type == 'chrome':
-            payload = bytes.fromhex('04030804040105030805050108060601')
-        else:
-            payload = b'\x04\x03\x05\x03\x06\x03\x08\x04\x08\x05\x08\x06\x04\x01\x05\x01\x06\x01\x02\x03\x02\x01'
 
-        self.payload = struct.pack('!H', len(payload)) + payload
+    def dump(self, host, context):
+        if context.browser_type == "chrome":
+            payload = bytes.fromhex("04030804040105030805050108060601")
+        else:
+            payload = b"\x04\x03\x05\x03\x06\x03\x08\x04\x08\x05\x08\x06\x04\x01\x05\x01\x06\x01\x02\x03\x02\x01"
+
+        self.payload = struct.pack("!H", len(payload)) + payload
         self.fields_desc[1] = self.payload
 
         return super().dump(host, context)
 
+
 class ExtRecordSizeLimit(_BaseExtension):
-    _type = 0x1c
-    payload = '\x40\x01'
+    _type = 0x1C
+    payload = "\x40\x01"
     fields_desc = [
         _type,
         payload,
     ]
 
 
-#tls1.3
+# tls1.3
 class ExtKeyShare(_BaseExtension):
     _type = 0x33
-    payload = bytes.fromhex('0029aaaa000100001d002049266d1d91aaa329581793362977e7cf0a17a70ed23bcbfb5cf64e31697af80f')
+    payload = bytes.fromhex(
+        "0029aaaa000100001d002049266d1d91aaa329581793362977e7cf0a17a70ed23bcbfb5cf64e31697af80f"
+    )
     fields_desc = [
         _type,
         payload,
     ]
-    def dump(self, host, context):
-        if context.browser_type == 'chrome':
-            grease = struct.pack('!H', context.grease_group)
 
-            group_rand_key = grease + struct.pack('!H', 1) + b'\x00'
-            group_x25519_key = b'\x00\x1d' + struct.pack('!H', len(context.group_x25519_key)) + context.group_x25519_key
-            key =  group_rand_key + group_x25519_key
+    def dump(self, host, context):
+        if context.browser_type == "chrome":
+            grease = struct.pack("!H", context.grease_group)
+
+            group_rand_key = grease + struct.pack("!H", 1) + b"\x00"
+            group_x25519_key = (
+                b"\x00\x1d"
+                + struct.pack("!H", len(context.group_x25519_key))
+                + context.group_x25519_key
+            )
+            key = group_rand_key + group_x25519_key
         else:
-            group_x25519_key = b'\x00\x1d' + struct.pack('!H',len(context.group_x25519_key)) + context.group_x25519_key
-            group_secp_key = b'\x00\x17' + struct.pack('!H', len(context.group_secp_key)) + context.group_secp_key
+            group_x25519_key = (
+                b"\x00\x1d"
+                + struct.pack("!H", len(context.group_x25519_key))
+                + context.group_x25519_key
+            )
+            group_secp_key = (
+                b"\x00\x17"
+                + struct.pack("!H", len(context.group_secp_key))
+                + context.group_secp_key
+            )
 
             key = group_x25519_key + group_secp_key
 
-        self.payload = struct.pack('!H', len(key)) + key
+        self.payload = struct.pack("!H", len(key)) + key
         self.fields_desc[1] = self.payload
 
         return super().dump(host, context)
 
 
 class ExtPskKeyExchange_modes(_BaseExtension):
-    _type = 0x2d
-    payload = '\x01\x01'
+    _type = 0x2D
+    payload = "\x01\x01"
     fields_desc = [
         _type,
         payload,
     ]
+
 
 class ExtSupportdVersions(_BaseExtension):
-    _type = 0x2b
-    payload = '\x04\x03\x04\x03\x03'
+    _type = 0x2B
+    payload = "\x04\x03\x04\x03\x03"
     fields_desc = [
         _type,
         payload,
     ]
-    def dump(self, host, context):
 
-        if context.browser_type == 'chrome':
-            self.payload = '\x06\xda\xda\x03\x04\x03\x03'
-            self.payload = '\x06\x8a\x8a\x03\x04\x03\x03'
+    def dump(self, host, context):
+        if context.browser_type == "chrome":
+            self.payload = "\x06\xda\xda\x03\x04\x03\x03"
+            self.payload = "\x06\x8a\x8a\x03\x04\x03\x03"
         else:
-            self.payload = '\x04\x03\x04\x03\x03'
+            self.payload = "\x04\x03\x04\x03\x03"
         self.fields_desc[1] = self.payload
 
         return super().dump(host, context)
 
 
 class ExtCompressCertificate(_BaseExtension):
-    _type = 0x1b
-    payload = '\x02\x00\x02'
+    _type = 0x1B
+    payload = "\x02\x00\x02"
     fields_desc = [
         _type,
         payload,
     ]
+
 
 class ExtPadding(_BaseExtension):
     _type = 0x15
-    payload = bytes(random.randint(100,300))
+    payload = bytes(random.randint(100, 300))
     fields_desc = [
         _type,
         payload,
     ]
 
 
-def make_randext(host, ext_type, payload=None,context=None):
-
+def make_randext(host, ext_type, payload=None, context=None):
     if payload is None:
-        #强制使用内置扩展数据
+        # 强制使用内置扩展数据
         if ext_type in _tls_ext_cls.keys():
             payload = _tls_ext_cls[ext_type].payload
         else:
-            payload = ''
+            payload = ""
     fields_desc = [
         ext_type,
         payload,
     ]
-    ext = type('=^_^=', (_BaseExtension,), dict(fields_desc=fields_desc))
+    ext = type("=^_^=", (_BaseExtension,), dict(fields_desc=fields_desc))
     return ext().dump(host, context)
 
 
 def dump_extension(host, context):
-
     exts = context.exts
     exts_payload = context.exts_payload
     ext_data = []
@@ -292,8 +322,5 @@ def dump_extension(host, context):
                 payload = exts_payload.get(e)
                 d = make_randext(host, e, payload)
             ext_data.append(d)
-    temp = b''.join(ext_data)
-    return b'%s%s' % (struct.pack('!H',len(temp)), temp)
-
-
-
+    temp = b"".join(ext_data)
+    return b"%s%s" % (struct.pack("!H", len(temp)), temp)
