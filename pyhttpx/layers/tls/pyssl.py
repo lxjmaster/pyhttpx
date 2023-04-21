@@ -1,3 +1,4 @@
+
 """
 TLS session handler.
 """
@@ -11,6 +12,7 @@ import importlib
 import threading
 import random
 
+from pyhttpx.layers.tls.keyexchange import ServerContext,ClientCpiherSpec,ClientKeyExchange
 from pyhttpx.layers.tls.keyexchange import (
     ServerContext,
     ClientCpiherSpec,
@@ -32,8 +34,9 @@ from pyhttpx.exception import (
 
 from pyhttpx.layers.tls.socks import SocketProxy
 
-PROTOCOL_TLSv1_2 = b"\x03\x03"
-PROTOCOL_TLSv1_3 = b"\x03\x04"
+
+PROTOCOL_TLSv1_2 = b'\x03\x03'
+PROTOCOL_TLSv1_3 = b'\x03\x04'
 
 
 def default_context():
@@ -65,7 +68,7 @@ class SSLContext:
         self.browser_type = browser_type or "chrome"
         self.exts_payload = exts_payload
         self.shuffle_extension_protocol = shuffle_extension_protocol
-        # https://www.rfc-editor.org/rfc/rfc8701
+        #https://www.rfc-editor.org/rfc/rfc8701
 
         grease_list = [
             0x0A0A,
@@ -85,7 +88,6 @@ class SSLContext:
             0xEAEA,
             0xFAFA,
         ]
-
         def choose_grease():
             e = random.choice(grease_list)
             grease_list.remove(e)
@@ -230,6 +232,7 @@ class TLSSocket:
             self.isclosed = False
             return self._tls_do_handshake13()
 
+
     def _tls_do_handshake13(self):
         ciphersuites, extensions = CipherSuites(self.context).dump(), dump_extension(
             self.host, self.context
@@ -266,6 +269,7 @@ class TLSSocket:
                 flowtext += s
                 recv_len = length - len(flowtext)
 
+
             if content_type == 0x16:
                 if not self.server_change_cipher_spec:
                     self.tls_cxt.handshake_data.append(flowtext)
@@ -299,6 +303,7 @@ class TLSSocket:
                             alpn.decode("latin1")
                         )
 
+
                     if self.tls13:
                         self.server_change_cipher_spec = True
                         server_publickey = self.servercontext.serverstore.ext[51][4:]
@@ -307,6 +312,7 @@ class TLSSocket:
                         )
                         self.tls_cxt.load_alg()
                         self.tls_cxt.make_secret(server_publickey)
+
 
                 if not self.tls13:
                     if not exchanage and self.server_change_cipher_spec:
@@ -503,6 +509,8 @@ class TLSSocket:
             )
             self.sock.sendall(write_buff)
             plaintext = plaintext[n:]
+
+
 
     def mutable_recv(self, size=1024):
         try:

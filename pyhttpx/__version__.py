@@ -1,6 +1,6 @@
 __title__ = "pyhttpx"
 __description__ = "Python HTTP for Humans."
-__version__ = "1.1.2"
+__version__ = "2.10.2"
 __author__ = "3301"
 __author_email__ = "1114135928@qq.com"
 __github__ = "https://github.com/zero3301/pyhttpx"

@@ -2,13 +2,20 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 import sys
 
+# install_requires = [
+#     "cryptography==36.0.1",
+#     "rsa==4.8",
+#     "pyOpenSSL==21.0.0",
+#     "brotli",
+#     "hpack==4.0.0",
+# ]
+
 install_requires = [
-    "cryptography==36.0.1",
-    "rsa==4.8",
-    "pyOpenSSL==21.0.0",
+    "cryptography==40.0.2",
+    "rsa==4.9",
+    "pyOpenSSL==23.1.1",
     "brotli",
     "hpack==4.0.0",
-
 ]
 
 test_requirements = [
@@ -32,7 +39,8 @@ class PyTest(TestCommand):
 packages = find_packages()
 setup(
     name = "pyhttpx",
-    version = "2.10.0.rc",
+
+    version = "2.10.2",
     keywords = ["pip", "pyhttpx"],
     description = "HTTP library.",
     long_description = "HTTP library, TLS supported version：tls1.2/tls1.3, HTTP supported version: http1.1/http2",

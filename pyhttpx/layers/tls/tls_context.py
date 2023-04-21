@@ -19,7 +19,6 @@ from pyhttpx.exception import TLSVerifyDataExpetion
 
 import threading
 
-
 class TLSContext(object):
     def __init__(self, name):
         self.name = name
@@ -37,9 +36,9 @@ class TLSContext(object):
         self.must_encrypt = False
 
 
+
 def rsa_encrypt(plaintxt, publickey):
     return rsa.encrypt(plaintxt, publickey)
-
 
 class TLSSessionCtx(object):
     def __init__(self, client=True):
@@ -128,6 +127,7 @@ class TLSSessionCtx(object):
             P = P + mac
             P = os.urandom(16) + P
 
+
         data = self.client_ctx.crypto_alg.encrypt(P, A, sequence)
         self.client_ctx.sequence += 1
         return data
@@ -172,6 +172,7 @@ class TLSSessionCtx(object):
             self.hkdf = TLS13_HKDF(hash_alg)
             if "CHACHA20_POLY1305" in cipher_name:
                 self.hkdf.key_len = 32
+
 
         self.cls_cipher_alg = cipher_alg
         self.kx_alg = kx_alg
@@ -222,6 +223,7 @@ class TLSSessionCtx(object):
             label = b"extended master secret"
             seed = label + self.hash_alg(b"".join(self.handshake_data)).digest()
 
+
         self.master_secret = prf(self.premaster_secret, seed, self.hash_alg, outlen=48)
         sslkey_file_name = os.environ.get("SSLKEYLOGFILE")
         if sslkey_file_name:
@@ -232,6 +234,7 @@ class TLSSessionCtx(object):
     def key_expandsion(self):
         seed = b"key expansion" + self.server_ctx.random + self.client_ctx.random
         self.key_block = prf(self.master_secret, seed, self.hash_alg, outlen=256)
+
 
     def negotiated_premaster_secret(self):
         if self.kx_alg.startswith("ECDHE"):
@@ -280,6 +283,7 @@ class TLSSessionCtx(object):
         self.handshake_data.append(verify_data)
         return verify_data
 
+
     def verify_server_message(self, server_verify_data):
         label = b"server finished"
         handshake = self.hash_alg(b"".join(self.handshake_data)).digest()
@@ -288,6 +292,7 @@ class TLSSessionCtx(object):
         tmp = b"\x14\x00\x00\x0c" + tmp
         if tmp != server_verify_data:
             raise TLSVerifyDataExpetion("TLSVerifyDataExpetion")
+
 
     def compute_verify_data(self):
         verify_data = self.hkdf.compute_verify_data(
@@ -391,6 +396,7 @@ class TLSSessionCtx13(TLSSessionCtx):
             ],
         )
 
+
         self.handshake_data = []
 
         self.tls_version = b"\x03\x04"
@@ -412,6 +418,8 @@ class TLSSessionCtx13(TLSSessionCtx):
         self.hkdf = TLS13_HKDF(hash_name)
 
     def make_secret(self, server_publickey):
+
+
         self.premaster_secret = CryptoContextFactory.crypto_container[
             0x001D
         ].client_kx_privkey.exchange(
@@ -455,7 +463,9 @@ class TLSSessionCtx13(TLSSessionCtx):
             server_application_traffic_secret, b"iv", b"", 12
         )
 
+
     def encrypt(self, P, content_type):
+
         sequence = struct.pack("!Q", self.client_ctx.sequence)
         p_len = len(P)
 
@@ -466,6 +476,7 @@ class TLSSessionCtx13(TLSSessionCtx):
         return data
 
     def decrypt(self, C, content_type):
+
         sequence = struct.pack("!Q", self.server_ctx.sequence)
         p_len = len(C)
         # 密文已经包含tag的长度
@@ -473,6 +484,7 @@ class TLSSessionCtx13(TLSSessionCtx):
         data = self.server_ctx.crypto_alg.decrypt(C, A, sequence)
         self.server_ctx.sequence += 1
         return data
+
 
     def load_alg(self):
         cipher_name = TLS_SUITES.get(self.negotiated.ciphersuite)["name"]
@@ -488,6 +500,7 @@ class TLSSessionCtx13(TLSSessionCtx):
 
         self.kx_alg = kx_alg
         self.hmac_alg = hmac_alg
+
 
     def compute_verify_data(self):
         verify_data = self.hkdf.compute_verify_data(

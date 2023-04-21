@@ -267,6 +267,10 @@ class HttpSession(object):
 
             dh["content-length"] = len(req_body)
 
+        else:
+            if dh.get('content-length'):
+                del dh['content-length']
+
         for k, v in dh.items():
             msg += ("%s: %s\r\n" % (k, v)).encode("latin1")
 

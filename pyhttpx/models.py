@@ -141,6 +141,7 @@ class Response(object):
                 self.read_ended = True
 
         if self.headers:
+
             if self.transfer_encoding == self.headers.get("transfer-encoding"):
                 # chunked
                 if self.plaintext_buffer.endswith(b"0\r\n\r\n"):
