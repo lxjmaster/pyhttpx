@@ -212,29 +212,25 @@ class ExtKeyShare(_BaseExtension):
     ]
 
     def dump(self, host, context):
+
+        group_x25519_key = (
+                b"\x00\x1d"
+                + struct.pack("!H", len(context.group_x25519_key))
+                + context.group_x25519_key
+        )
+        group_secp_key = (
+                b"\x00\x17"
+                + struct.pack("!H", len(context.group_secp_key))
+                + context.group_secp_key
+        )
+        key = group_x25519_key + group_secp_key
+
         if context.browser_type == "chrome":
             grease = struct.pack("!H", context.grease_group)
 
             group_rand_key = grease + struct.pack("!H", 1) + b"\x00"
-            group_x25519_key = (
-                b"\x00\x1d"
-                + struct.pack("!H", len(context.group_x25519_key))
-                + context.group_x25519_key
-            )
-            key = group_rand_key + group_x25519_key
-        else:
-            group_x25519_key = (
-                b"\x00\x1d"
-                + struct.pack("!H", len(context.group_x25519_key))
-                + context.group_x25519_key
-            )
-            group_secp_key = (
-                b"\x00\x17"
-                + struct.pack("!H", len(context.group_secp_key))
-                + context.group_secp_key
-            )
 
-            key = group_x25519_key + group_secp_key
+            key = group_rand_key + key
 
         self.payload = struct.pack("!H", len(key)) + key
         self.fields_desc[1] = self.payload

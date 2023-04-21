@@ -7,8 +7,8 @@ from pyhttpx.layers.tls.crypto.prf import prf
 from pyhttpx.layers.tls.suites import TLS_SUITES
 
 from pyhttpx.exception import (
-    TLSECCNotSupportedErrorExpetion,
-    TLSCipherNotSupportedErrorExpetion,
+    TLSECCNotSupportedErrorException,
+    TLSCipherNotSupportedErrorException,
 )
 
 
@@ -28,7 +28,7 @@ class ServerStore:
         cipher_suit = TLS_SUITES.get(int(self.cipher_suit.hex(), 16))
 
         if cipher_suit is None:
-            raise TLSCipherNotSupportedErrorExpetion(
+            raise TLSCipherNotSupportedErrorException(
                 f"negotiation error, the cipher suite does not support {self.cipher_suit.hex()}"
             )
 
@@ -41,6 +41,14 @@ class ServerStore:
             ext_type = int(ext_datas[:2].hex(), 16)
             el = struct.unpack("!H", ext_datas[2:4])[0]
             val = ext_datas[4 : 4 + el]
+            # 处理key_share
+            if ext_type == 51:
+                group = int(val[:2].hex(), 16)
+                key_exchange_length = struct.unpack("!H", val[2:4])[0]
+                val = {
+                    "group": group,
+                    "key_exchange": val[4: 4 + key_exchange_length]
+                }
             self.ext[ext_type] = val
             ext_datas = ext_datas[4 + el :]
 
@@ -94,7 +102,7 @@ class ServerContext:
                 b"\x00\x18",
                 b"\x00\x19",
             ]:
-                raise TLSECCNotSupportedErrorExpetion(f"不支持椭圆曲线算法: {self.curve_name}")
+                raise TLSECCNotSupportedErrorException(f"不支持椭圆曲线算法: {self.curve_name}")
 
             if self.curve_name == b"\x00\x1d":
                 # x25519

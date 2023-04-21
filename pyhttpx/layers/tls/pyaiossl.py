@@ -28,7 +28,7 @@ from pyhttpx.layers.tls.tls_context import TLSSessionCtx
 
 
 from pyhttpx.exception import (
-    TLSDecryptErrorExpetion,
+    TLSDecryptErrorException,
     ConnectionTimeout,
     ConnectionClosed,
     ReadTimeout,
@@ -120,7 +120,7 @@ class TLSSocket:
                     elif handshake_type == 0x14:
                         self.server_change_cipher_spec = True
                     elif handshake_type == 0x15:
-                        raise TLSDecryptErrorExpetion(
+                        raise TLSDecryptErrorException(
                             "handshake failed!, Server Decrypt Error"
                         )
                     recv = recv[5 + length :]

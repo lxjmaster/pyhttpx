@@ -1,63 +1,65 @@
-class BaseExpetion(Exception):
+class PyhttpxBaseException(Exception):
     pass
 
 
-class TLSVerifyDataExpetion(BaseExpetion):
+class TLSVerifyDataException(PyhttpxBaseException):
     pass
 
 
-class TLSHandshakeFailed(BaseExpetion):
+class TLSHandshakeFailed(PyhttpxBaseException):
     pass
 
 
-class TLSDecryptErrorExpetion(BaseExpetion):
+class TLSDecryptErrorException(PyhttpxBaseException):
     pass
 
 
-class TLSEncryptedAlertExpetion(BaseExpetion):
+class TLSEncryptedAlertException(PyhttpxBaseException):
     pass
 
 
-class TLSCipherNotSupportedErrorExpetion(BaseExpetion):
+class TLSCipherNotSupportedErrorException(PyhttpxBaseException):
     pass
 
 
-class TLSECCNotSupportedErrorExpetion(BaseExpetion):
+class TLSExtensionNotSupportedErrorException(PyhttpxBaseException):
     pass
 
 
-class ConnectionAbortedError(
-    BaseExpetion,
-):
+class TLSECCNotSupportedErrorException(PyhttpxBaseException):
     pass
 
 
-class ConnectionTimeout(BaseExpetion):
+class PyhttpxConnectionAbortedError(PyhttpxBaseException):
     pass
 
 
-class ConnectionClosed(BaseExpetion):
+class ConnectionTimeout(PyhttpxBaseException):
     pass
 
 
-class ReadTimeout(BaseExpetion):
+class ConnectionClosed(PyhttpxBaseException):
     pass
 
 
-class TooManyRedirects(BaseExpetion):
+class ReadTimeout(PyhttpxBaseException):
+    pass
+
+
+class TooManyRedirects(PyhttpxBaseException):
     pass
 
 
 # websocket
-class SwitchingProtocolError(BaseExpetion):
+class SwitchingProtocolError(PyhttpxBaseException):
     pass
 
 
-class SecWebSocketKeyError(BaseExpetion):
+class SecWebSocketKeyError(PyhttpxBaseException):
     pass
 
 
-class WebSocketClosed(BaseExpetion):
+class WebSocketClosed(PyhttpxBaseException):
     pass
 
 

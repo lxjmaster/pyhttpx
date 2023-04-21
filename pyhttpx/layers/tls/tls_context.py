@@ -15,7 +15,7 @@ from pyhttpx.layers.tls.crypto.ecc import CryptoContextFactory
 from pyhttpx.layers.tls.crypto.prf import prf
 from pyhttpx.layers.tls.suites import get_algs_from_ciphersuite_name, TLS_SUITES
 from pyhttpx.layers.tls.crypto.hkdf import TLS13_HKDF
-from pyhttpx.exception import TLSVerifyDataExpetion
+from pyhttpx.exception import TLSVerifyDataException, TLSExtensionNotSupportedErrorException
 
 import threading
 
@@ -291,7 +291,7 @@ class TLSSessionCtx(object):
 
         tmp = b"\x14\x00\x00\x0c" + tmp
         if tmp != server_verify_data:
-            raise TLSVerifyDataExpetion("TLSVerifyDataExpetion")
+            raise TLSVerifyDataException("TLSVerifyDataException")
 
 
     def compute_verify_data(self):
@@ -306,12 +306,27 @@ class TLSSessionCtx(object):
         )
         return verify_data
 
-    def make_secret(self, server_publickey):
-        self.premaster_secret = CryptoContextFactory.crypto_container[
-            0x001D
-        ].client_kx_privkey.exchange(
-            x25519.X25519PublicKey.from_public_bytes(server_publickey)
-        )
+    def make_secret(self, server_key_group):
+
+        group = server_key_group["group"]
+        server_publickey = server_key_group["key_exchange"]
+
+        if group == 29:
+            self.premaster_secret = CryptoContextFactory.crypto_container[
+                0x001D
+            ].client_kx_privkey.exchange(
+                x25519.X25519PublicKey.from_public_bytes(server_publickey)
+            )
+        elif group == 23:
+            self.premaster_secret = CryptoContextFactory.crypto_container[
+                0x0017
+            ].client_kx_privkey.exchange(
+                cg_ec.ECDH(), cg_ec.EllipticCurvePublicKey.from_encoded_point(
+                    CryptoContextFactory.crypto_container[0x0017].curve, server_publickey
+                )
+            )
+        else:
+            raise TLSExtensionNotSupportedErrorException(f"Extension: key_share ({group}) not support")
 
         self.secrets = self.hkdf.make_secret(self.premaster_secret, self.handshake_data)
 

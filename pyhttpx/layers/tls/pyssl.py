@@ -24,7 +24,7 @@ from pyhttpx.layers.tls.extensions import dump_extension
 from pyhttpx.layers.tls.tls_context import TLSSessionCtx
 
 from pyhttpx.exception import (
-    TLSDecryptErrorExpetion,
+    TLSDecryptErrorException,
     ConnectionTimeout,
     ConnectionClosed,
     TLSHandshakeFailed,
@@ -232,12 +232,11 @@ class TLSSocket:
             self.isclosed = False
             return self._tls_do_handshake13()
 
-
     def _tls_do_handshake13(self):
-        ciphersuites, extensions = CipherSuites(self.context).dump(), dump_extension(
-            self.host, self.context
-        )
-        hello = HelloClient(ciphersuites, extensions)
+
+        cipher_suites = CipherSuites(self.context).dump()
+        extensions = dump_extension(self.host, self.context)
+        hello = HelloClient(cipher_suites, extensions)
         self.tls_cxt.client_ctx.random = hello.hanshake.random
         self.sock.sendall(hello.dump(self.tls_cxt))
 
@@ -282,6 +281,10 @@ class TLSSocket:
                         self.servercontext.load(payload)
                         flowtext = flowtext[4 + extlen :]
 
+                        # TODO: 这里缺少了Hello Retry Request的处理逻辑
+                        # Hello Retry Request包的Random固定为cf21ad74e59a6111be1d8c021e65b891c2a211167abb8c5e079e09e2c8a8339c
+                        # "cf 21 ad 74 e5 9a 61 11 be 1d 8c 02 1e 65 b8 91 c2 a2 11 16 7a bb 8c 5e 07 9e 09 e2 c8 a8 33 9c"
+
                         if handshake_type == b"\x0d":
                             # 证书请求
                             self.tls_cxt.certificate_request = True
@@ -306,12 +309,12 @@ class TLSSocket:
 
                     if self.tls13:
                         self.server_change_cipher_spec = True
-                        server_publickey = self.servercontext.serverstore.ext[51][4:]
+                        server_key_group = self.servercontext.serverstore.ext[51]   # key_share
                         self.tls_cxt.negotiated.ciphersuite = int(
                             self.servercontext.serverstore.cipher_suit.hex(), 16
                         )
                         self.tls_cxt.load_alg()
-                        self.tls_cxt.make_secret(server_publickey)
+                        self.tls_cxt.make_secret(server_key_group)
 
 
                 if not self.tls13:
@@ -440,7 +443,7 @@ class TLSSocket:
                             pass
 
             elif content_type == 0x15:
-                raise TLSDecryptErrorExpetion("handshake failed!, server encrypt error")
+                raise TLSDecryptErrorException("handshake failed!, server encrypt error")
 
             if not self.tls13:
                 if self.servercontext.done and exchanage:

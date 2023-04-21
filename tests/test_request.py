@@ -1,6 +1,6 @@
 import pyhttpx
 
 session = pyhttpx.HttpSession()
-response = session.get("http://127.0.0.1:8888")
+response = session.get("https://localhost:8443")
 print(response.text)
 
